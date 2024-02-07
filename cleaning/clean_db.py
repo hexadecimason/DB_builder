@@ -50,8 +50,10 @@ for file in file_list: #'file' runs through each file
     # file_row represents either a box or a set of boxes
     for file_row in range(len(sub_df)):
 
+        # set up dummy values for counting boxes
         boxes_in_row = -1
         boxes_in_file = -1
+
         row_top = sub_df['Top'].iloc[file_row]
         row_bottom = sub_df['Bottom'].iloc[file_row]
 
@@ -74,7 +76,6 @@ for file in file_list: #'file' runs through each file
             if box == boxes_in_row - 1: boxbottom = row_bottom
             else: boxbottom = np.NaN
 
-            #addBox(file_row, boxes_added + 1, boxes_in_file, boxtop, boxbottom)
             # zip columns 
             row_add = dict(zip(sub_df.columns.values.tolist(),
                 [sub_df['File #'].iloc[file_row],
@@ -106,6 +107,7 @@ for file in file_list: #'file' runs through each file
                 sub_df['Restrictions'].iloc[file_row],
                 sub_df['Comments'].iloc[file_row] ]))
 
+            # add row to clean file
             cleanfile = pd.concat([cleanfile, pd.DataFrame([row_add])], ignore_index = True)
 
             boxes_added += 1

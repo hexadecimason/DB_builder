@@ -45,8 +45,8 @@ CREATE TABLE Box (
     box_num   int,
     top       int,
     bottom    int,
-    formation int,
-    condition int,
+    formation text,
+    condition text,
     comments  text,
 
     FOREIGN KEY (file_num) REFERENCES File,
