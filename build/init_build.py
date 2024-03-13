@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import sqlite3 as sq
 
-db_path = '../opic_core.db'
+# db_path = '../opic_core.db'
+db_path = '../db_api/api_testing/test.db'
 clean_df = pd.read_csv('../data/cleaned.csv')
 collection_name = 'OLD CORE'
 
@@ -13,7 +14,7 @@ q_addbox = "INSERT INTO Box VALUES (?, ?, ?, ?, ?, ?, ?)"
 q_wellfile = "INSERT INTO well_file VALUES (?, ?)"
 
 # DB connection
-con = sq.connect('../opic_core.db')
+con = sq.connect(db_path)
 curs = con.cursor()
 
 # empty DB before inserting new values
