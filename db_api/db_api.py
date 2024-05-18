@@ -1,6 +1,7 @@
 import sqlite3 as sq
 import numpy as np
 import pandas as pd
+import os
 
 class OPIC_DBC():
     """
@@ -361,6 +362,11 @@ class OPIC_DBC():
 
         update_tup = tuple( [value_dict[k] for k in self.file_attr]  )
 
+        # Add to well_file first to ensure file has a well/API on record
+        try: self.cursor.execute('INSERT INTO well_file VALUES (?, ?)', (api, value_dict['file_num']))
+        except Exception as e:
+            return f'error adding file to api {api}\n' + str(e)
+
         try: self.cursor.execute(self.ADD_FILE, update_tup)
         except Exception as e:
             return f'error adding file to api {api}\n' + str(e)
@@ -426,7 +432,7 @@ class OPIC_DBC():
         if self.state_check() is None: return
     
         try: self.cursor.execute(self.DELETE_BOX, (file_num, box_num))
-        except: Exception as e:
+        except Exception as e:
             return f'error removing box: {file_num}.{box_num}'
 
         return f'deleted box: {file_num}.{box_num}'
@@ -438,7 +444,8 @@ class OPIC_DBC():
 
 def main():
     #db_path = '../opic_core.db'
-    obj = OPIC_DBC('api_testing/test.db')
+    print(os.getcwd())
+    obj = OPIC_DBC('db_api/test.db')
     obj.write = True
 
     '''
@@ -517,7 +524,7 @@ def main():
     file_num = 1
     box_dict = {'box_num': 333,'top': 1234,'bottom': 2345,'formation': 'Deeepwater Fm',
     'condition': 'Good','comments': 'this box contains certifiably cool stuff'}
-
+    print(obj.cursor.execute('DELETE FROM Box WHERE file_num = ? AND box_num = ?', (file_num, box_dict['box_num'])).fetchall())
     print(obj.cursor.execute('SELECT * FROM Box WHERE file_num = ?', (file_num,)).fetchall())
     print(obj.add_box(file_num, box_dict))
     obj.connection.commit()
@@ -531,13 +538,13 @@ def main():
 
     # delete test values
     obj.cursor.execute('DELETE FROM File WHERE file_num = \'2X\'')
-    obj.cursor.execute('DELETE FROM well_file WHERE file_num = \'2X\'')
 
     print(obj.cursor.execute('SELECT * FROM well_file WHERE api = ?', (api_num,)).fetchall())
+    print(obj.cursor.execute('SELECT * FROM File WHERE file_num = \'2X\'').fetchall())
     print(obj.add_file(api_num, file_dict))
     obj.connection.commit()
     print(obj.cursor.execute('SELECT * FROM well_file WHERE api = ?', (api_num,)).fetchall())
-
+    print(obj.cursor.execute('SELECT * FROM File WHERE file_num = \'2X\'').fetchall())
     
     print('\n----------TESTING add_well(): -----------\n')
 

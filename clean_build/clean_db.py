@@ -10,16 +10,15 @@ pd.set_option('display.width', 1000)
 df_master = pd.read_csv('data/DB_master.csv')
 
 # filter out no-API wells
-print(df_master['API'].str.isdecimal())
-print(df_master['API'].isna())
-df_noAPI = df_master[df_master['API'].isna() | ~(df_master['API'].str.isdecimal())]
+df_noAPI = df_master[df_master['API'].isna() | ~(df_master['API'].str.isdecimal().astype(bool))]
 df_noAPI.to_csv('data/no_api.csv', index = False)
-exit()
+# -----------------------
+
+# filter bad API entries out of working DF
 df_master.dropna(subset = 'API', inplace=True) # drop empty values
 df_filtered = df_master[df_master['API'].str.isdecimal()] # drop text entries
 
-
-# function to filter out bad lat/long values
+# function to repalce out bad lat/long values
 def checkfloat(num):
     try:
         return float(num)

@@ -3,15 +3,16 @@ import numpy as np
 import sqlite3 as sq
 
 # db_path = '../opic_core.db'
-db_path = '../db_api/api_testing/test.db'
-clean_df = pd.read_csv('../data/cleaned.csv')
+db_path = 'test.db'
+clean_df = pd.read_csv('data/cleaned.csv')
 collection_name = 'OLD CORE'
 
 # basic insert quieries for each table
-q_addwell = "INSERT INTO Well VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-q_addfile = "INSERT INTO File VALUES (?, ?, ?, ?, ?, ?, ?)"
-q_addbox = "INSERT INTO Box VALUES (?, ?, ?, ?, ?, ?, ?)"
+q_addwell = "INSERT INTO Well VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)"
+q_addfile = "INSERT INTO File VALUES (?,?,?,?,?, ?,?,?)"
+q_addbox = "INSERT INTO Box VALUES (?,?,?,?,?, ?,?)"
 q_wellfile = "INSERT INTO well_file VALUES (?, ?)"
+
 
 # DB connection
 con = sq.connect(db_path)
@@ -61,7 +62,8 @@ for api in clean_df['API'].unique():
                 'boxes' : file_df['Total'].iloc[0],
                 'box_type' : file_df['Box Type'].iloc[0],
                 'diameter' : file_df['Diameter'].iloc[0],
-                'location' : file_df['Location'].iloc[0] }
+                'location' : file_df['Location'].iloc[0],
+                'file_comments': '' }
 
         # ADD FILE
         # source file may still contain errors in File # values
@@ -89,12 +91,12 @@ for api in clean_df['API'].unique():
                         'bottom' : file_df['Bottom'].iloc[entry],
                         'formation' : file_df['Formation'].iloc[entry],
                         'condition' : file_df['Condition'].iloc[entry],
-                        'comments' : file_df['Comments'].iloc[entry]}
+                        'box_comments' : file_df['Comments'].iloc[entry]}
 
                 # ADD BOX
                 curs.execute(q_addbox, tuple(bx.values()) )
-        except:
-            print('error at file:', file, ' | box total: ', file_dict['boxes'])
+        except Exception as e:
+            print('error at file:', file, '\n', str(e))
 
     # each commit to DB occurs after each well and all files/boxes are added
     # print('committing: ', api)
