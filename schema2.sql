@@ -8,6 +8,7 @@
 -- RP_Sample(api, depth, etc.)
 
 DROP TABLE IF EXISTS Samples;
+DROP TABLE IF EXISTS Datapath;
 DROP TABLE IF EXISTS well_file;
 DROP TABLE IF EXISTS Box;
 DROP TABLE IF EXISTS Well;
@@ -98,6 +99,29 @@ CREATE TABLE Samples(
         ON UPDATE CASCADE,
     PRIMARY KEY (api, depth)
 );
+
+-- Prototype for holding photo data
+-- Massive blob data is not ideal, so we'll store file path data for photos instead.
+-- This allows us to find photos (or if they exist) in the database without restructuring
+-- existing data. Null path values mean that no photo/log/slide/etc data were found.
+
+-- IN THE FUTURE: May be better to use constants for file paths if the only difference is API
+/*
+Each set of paths is a weak entity set differentiated by the api foreign key.
+Each relative path could be identical, in which case a better solution could exist.
+
+CREATE TABLE Datapath (
+    api             int NOT NULL,
+    logpath         text,
+    photopath       text,
+    slidepath       text,
+    testingpath     text,
+
+    FOREIGN KEY (api) REFERENCES Well
+        ON UPDATE CASCADE,
+    PRIMARY KEY (api)
+);
+*/
 
 CREATE TABLE changelog(
     datetime     datetime,
