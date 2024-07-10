@@ -100,28 +100,27 @@ CREATE TABLE Samples(
     PRIMARY KEY (api, depth)
 );
 
--- Prototype for holding photo data
--- Massive blob data is not ideal, so we'll store file path data for photos instead.
--- This allows us to find photos (or if they exist) in the database without restructuring
--- existing data. Null path values mean that no photo/log/slide/etc data were found.
-
--- IN THE FUTURE: May be better to use constants for file paths if the only difference is API
-/*
-Each set of paths is a weak entity set differentiated by the api foreign key.
-Each relative path could be identical, in which case a better solution could exist.
-
-CREATE TABLE Datapath (
-    api             int NOT NULL,
-    logpath         text,
-    photopath       text,
-    slidepath       text,
-    testingpath     text,
+-- large numbers of BLOBs are not ideal
+-- file paths are known, presence of files is not
+-- thus, we use T/F values for each type of photo data
+-- avoids dublicating many GB of data, and avoids needing a standard encoding/decoding scheme.
+CREATE TABLE Images (
+    api                 int NOT NULL,
+    core_photos         int,
+    core_analysis       int,
+    mud_logs            int,
+    electric_logs       int,
 
     FOREIGN KEY (api) REFERENCES Well
         ON UPDATE CASCADE,
-    PRIMARY KEY (api)
+    PRIMARY KEY (api),
+
+    CHECK(  (core_photos == 0 OR core_photos == 1)
+        AND (core_analysis == 0 OR core_analysis == 1)
+        AND (mud_logs == 0 OR mud_logs == 1)
+        AND (electric_logs == 0 OR electric_logs == 1))
 );
-*/
+
 
 CREATE TABLE changelog(
     datetime     datetime,
