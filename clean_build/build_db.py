@@ -4,25 +4,25 @@ import sqlite3 as sq
 
 # db_path = '../opic_core.db'
 db_path = 'test.db'
-clean_df = pd.read_csv('data/cleaned.csv')
+
+# SELECT SRC FILE + COLLECTION NAME
+clean_df = pd.read_csv('data_output/cleaned.csv')
 collection_name = 'OLD CORE'
 
 # basic insert quieries for each table
 q_addwell = "INSERT INTO Well VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)"
 q_addfile = "INSERT INTO File VALUES (?,?,?,?,?, ?,?,?)"
 q_addbox = "INSERT INTO Box VALUES (?,?,?,?,?, ?,?)"
-q_wellfile = "INSERT INTO well_file VALUES (?, ?)"
-
 
 # DB connection
 con = sq.connect(db_path)
 curs = con.cursor()
 
-# empty DB before inserting new values
-curs.execute('DELETE FROM well_file')
-curs.execute('DELETE FROM File')
-curs.execute('DELETE FROM Well')
-curs.execute('DELETE FROM Box')
+# empty DB before inserting new values - not used when adding
+# curs.execute('DELETE FROM well_file')
+# curs.execute('DELETE FROM File')
+# curs.execute('DELETE FROM Well')
+# curs.execute('DELETE FROM Box')
 
 # loop through each unique API
 for api in clean_df['API'].unique():
@@ -70,7 +70,6 @@ for api in clean_df['API'].unique():
         # try/catch to flag these all at once
         try:
             curs.execute(q_addfile, tuple(file_dict.values()) )
-            curs.execute(q_wellfile, (well['api'], file_dict['file_num']) )
 
             blank_idx = 1
 

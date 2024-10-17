@@ -7,11 +7,11 @@ pd.set_option('display.width', 1000)
 
 # load csv
 # df_master = pd.read_csv('../data/DB_master.csv')
-df_master = pd.read_csv('data/DB_master.csv')
+df_master = pd.read_csv('data_input/DB_master.csv')
 
 # filter out no-API wells
 df_noAPI = df_master[df_master['API'].isna() | ~(df_master['API'].str.isdecimal().astype(bool))]
-df_noAPI.to_csv('data/no_api.csv', index = False)
+df_noAPI.to_csv('data_output/no_api.csv', index = False)
 # -----------------------
 
 # filter bad API entries out of working DF
@@ -134,5 +134,5 @@ clean_df['Total'] = clean_df['Total'].astype('Int32')
 
 # SAVE TO FILE
 print("saving CSV file...")
-clean_df.to_csv('/data/' + 'cleaned.csv', index = False)
+clean_df.to_csv('/data_output/' + 'cleaned.csv', index = False)
 

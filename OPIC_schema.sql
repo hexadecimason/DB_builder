@@ -1,14 +1,4 @@
--- SCHEMA:
-
--- Well(api, operator, lease, well_num, ...)
--- File(file_num, sample_type, box_count, ...)
--- Box(file_num , box_num, top, bottom, ...)
--- well_file(file_num, api)
-
--- RP_Sample(api, depth, etc.)
-
-DROP TABLE IF EXISTS Samples;
-DROP TABLE IF EXISTS Datapath;
+DROP TABLE IF EXISTS Sample;
 DROP TABLE IF EXISTS well_file;
 DROP TABLE IF EXISTS Box;
 DROP TABLE IF EXISTS Well;
@@ -19,10 +9,7 @@ DROP TABLE IF EXISTS changelog;
 DROP VIEW IF EXISTS xl_grid_full;
 DROP VIEW IF EXISTS xl_grid_basic;
 DROP VIEW IF EXISTS rp_grid;
-
-DROP TRIGGER IF EXISTS log_update;
-DROP TRIGGER IF EXISTS log_deletion;
-DROP TRIGGER IF EXISTS log_insertion;
+DROP VIEW IF EXISTS photofile_grid;
 
 DROP TRIGGER IF EXISTS log_filenum_change;
 DROP TRIGGER IF EXISTS log_file_delete;
@@ -40,11 +27,12 @@ CREATE TABLE Well (
     rng        int,
     rng_d      text,
     qq         text,
-    lat        float,
-    long       float,
+    lat        real,
+    long       real,
     county     text,
     state      text,
-    field      text
+    field      text,
+    img_files  text
 );
 
 CREATE TABLE File (
@@ -62,8 +50,8 @@ CREATE TABLE File (
 CREATE TABLE Box (
     file_num        text NOT NULL,
     box_num         int NOT NULL,
-    top             int,
-    bottom          int,
+    top             real,
+    bottom          real,
     formation       text,
     condition       text,
     box_comments    text,
@@ -87,7 +75,7 @@ CREATE TABLE well_file (
 );
 
 -- This is a weak entity set
-CREATE TABLE Samples(
+CREATE TABLE Sample (
     api             int NOT NULL,
     depth           real NOT NULL,
     sample_type     text,
@@ -100,29 +88,7 @@ CREATE TABLE Samples(
     PRIMARY KEY (api, depth)
 );
 
--- large numbers of BLOBs are not ideal
--- file paths are known, presence of files is not
--- thus, we use T/F values for each type of photo data
--- avoids dublicating many GB of data, and avoids needing a standard encoding/decoding scheme.
-CREATE TABLE Images (
-    api                 int NOT NULL,
-    core_photos         int,
-    core_analysis       int,
-    mud_logs            int,
-    electric_logs       int,
-
-    FOREIGN KEY (api) REFERENCES Well
-        ON UPDATE CASCADE,
-    PRIMARY KEY (api),
-
-    CHECK(  (core_photos == 0 OR core_photos == 1)
-        AND (core_analysis == 0 OR core_analysis == 1)
-        AND (mud_logs == 0 OR mud_logs == 1)
-        AND (electric_logs == 0 OR electric_logs == 1))
-);
-
-
-CREATE TABLE changelog(
+CREATE TABLE changelog (
     datetime     datetime,
     type         text,
     change       text,
@@ -134,11 +100,10 @@ CREATE TABLE changelog(
 
 CREATE VIEW xl_grid_full
     AS
-    SELECT Well.api, operator, lease, well_num, sec,
-        twn, twn_d, rng, rng_d, qq, lat, long, county, state, field,
-        collection, File.file_num, sample_type, box_count, box_type,
-        diameter, location, box_num, top, bottom, formation,
-        condition, file_comments, box_comments
+    SELECT File.file_num, location, collection, box_num, box_count, Well.api, operator, lease, well_num,
+        sec, twn, twn_d, rng, rng_d, qq, lat, long, county, state, field,
+        formation, top, bottom, sample_type, box_type, condition,
+        diameter, file_comments, box_comments
     FROM Well, well_file, File, Box
     WHERE Well.api = well_file.api
     AND well_file.file_num = File.file_num
@@ -146,10 +111,9 @@ CREATE VIEW xl_grid_full
 
 CREATE VIEW xl_grid_basic
     AS
-    SELECT Well.api, operator, lease, well_num, county, state,
-        collection, File.file_num, file_comments,
-        sample_type, diameter, box_num, top, bottom, 
-        box_comments, formation, condition
+    SELECT File.file_num, location, colleciton, box_num, Well.api, operator, lease, well_num, 
+        county, state, formation, top, bottom, sample_type, box_type, condition,
+        file_comments, box_comments
     FROM Well, well_file, File, Box
     WHERE Well.api = well_file.api
     AND well_file.file_num = File.file_num
@@ -157,10 +121,15 @@ CREATE VIEW xl_grid_basic
 
 CREATE VIEW rp_grid
     AS
-    SELECT Well.api, operator, lease, well_num, county, state, field,
-        box_id, sample_type, depth, description, verified
+    SELECT box_id, Well.api, operator, lease, well_num, county, state,
+        depth, sample_type, description, verified
     FROM Well, Samples
     WHERE Well.api = Samples.api;
+
+CREATE VIEW photofile_grid
+    AS
+    SELECT api, operator lease, well_num, county, img_files
+    FROM Well;
 
 -- TRIGGERS (logging):
 -- Not every query needs logged, as much of the data can be verified with scout tickets and what's on the shelf.
@@ -179,4 +148,3 @@ BEGIN
     INSERT INTO changelog
     VALUES(current_timestamp, 'DELETE File', OLD.file_num);
 END;
-
